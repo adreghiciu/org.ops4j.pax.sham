@@ -13,7 +13,7 @@ You'll need a machine with Java 6+ and Apache Maven 3 installed.
 
 Checkout:
 
-    git git@github.com:adreghiciu/org.ops4j.pax.sham.git
+    git clone git@github.com:adreghiciu/org.ops4j.pax.sham.git
 
 Run Build:
 
