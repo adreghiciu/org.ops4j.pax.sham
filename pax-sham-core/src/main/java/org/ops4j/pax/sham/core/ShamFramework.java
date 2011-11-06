@@ -51,8 +51,6 @@ public class ShamFramework
 
     private List<ShamBundle> bundles;
 
-    private ShamBundleContext bundleContext;
-
     private List<ExecutionEnvironment> executionEnvironments;
 
     // ----------------------------------------------------------------------
@@ -64,7 +62,58 @@ public class ShamFramework
         executionEnvironments = new ArrayList<ExecutionEnvironment>();
         bundles = new ArrayList<ShamBundle>();
 
-        bundleContext = mock( ShamBundleContext.class );
+        installBundle().withBundleSymbolicName( "system" );
+    }
+
+    // ----------------------------------------------------------------------
+    // Public methods
+    // ----------------------------------------------------------------------
+
+    /**
+     * Builder method for specifying execution environments.
+     *
+     * @param environments execution environments simulated by mock framework
+     * @return itself, for fluent api usage
+     */
+    public ShamFramework withExecutionEnvironment( final ExecutionEnvironment... environments )
+    {
+        executionEnvironments.addAll( asList( environments ) );
+        return this;
+    }
+
+    /**
+     * Builder method for specifying packages exported by system bundle.
+     *
+     * @param exports packages exported by system bundle
+     * @return itself, for fluent api usage
+     */
+    public ShamFramework withSystemPackages( final String... exports )
+    {
+        getSystemBundle().withPackages( exports );
+        return this;
+    }
+
+    /**
+     * Helper getter for system bundle (bundle with id 0)
+     *
+     * @return mocked system bundle
+     */
+    public ShamBundle getSystemBundle()
+    {
+        return bundles.get( 0 );
+    }
+
+    /**
+     * Installs (creates) a new mocked bundle
+     *
+     * @return installed (mock) bundle
+     */
+    public ShamBundle installBundle()
+    {
+        final ShamBundle bundle = mock( ShamBundle.class, new PartialImplementation( ShamBundle.class ) );
+        bundles.add( bundle );
+
+        final ShamBundleContext bundleContext = mock( ShamBundleContext.class);
         when( bundleContext.getProperty( Constants.FRAMEWORK_EXECUTIONENVIRONMENT ) ).thenAnswer(
             new Answer<String>()
             {
@@ -117,67 +166,8 @@ public class ShamFramework
         {
             // we are mocking so it will not happen
         }
-        installBundle().withBundleSymbolicName( "system" );
-    }
 
-    // ----------------------------------------------------------------------
-    // Public methods
-    // ----------------------------------------------------------------------
-
-    /**
-     * Builder method for specifying execution environments.
-     *
-     * @param environments execution environments simulated by mock framework
-     * @return itself, for fluent api usage
-     */
-    public ShamFramework withExecutionEnvironment( final ExecutionEnvironment... environments )
-    {
-        executionEnvironments.addAll( asList( environments ) );
-        return this;
-    }
-
-    /**
-     * Builder method for specifying packages exported by system bundle.
-     *
-     * @param exports packages exported by system bundle
-     * @return itself, for fluent api usage
-     */
-    public ShamFramework withSystemPackages( final String... exports )
-    {
-        getSystemBundle().withPackages( exports );
-        return this;
-    }
-
-    /**
-     * Returns the mocked bundle context.
-     *
-     * @return mocked bundle context
-     */
-    public ShamBundleContext getBundleContext()
-    {
-        return bundleContext;
-    }
-
-    /**
-     * Helper getter for system bundle (bundle with id 0)
-     *
-     * @return mocked system bundle
-     */
-    public ShamBundle getSystemBundle()
-    {
-        return getBundleContext().getBundle( 0 );
-    }
-
-    /**
-     * Installs (creates) a new mocked bundle
-     *
-     * @return installed (mock) bundle
-     */
-    public ShamBundle installBundle()
-    {
-        final ShamBundle bundle = mock( ShamBundle.class, new PartialImplementation( ShamBundle.class ) );
-        bundles.add( bundle );
-        return bundle.setBundleId( bundles.size() - 1 ).setBundleContext( getBundleContext() );
+        return bundle.setBundleId( bundles.size() - 1 ).setBundleContext( bundleContext );
     }
 
     // ----------------------------------------------------------------------

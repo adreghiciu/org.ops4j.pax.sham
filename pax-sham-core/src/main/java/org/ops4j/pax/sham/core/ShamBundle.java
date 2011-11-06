@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Properties;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 
 /**
@@ -66,6 +68,11 @@ public abstract class ShamBundle
      * Bundle state. Defaults to {@link Bundle#INSTALLED}.
      */
     private int state;
+
+    /**
+     * Bundle
+     */
+    private List<BundleListener> bundleListeners;
 
     // ----------------------------------------------------------------------
     // Constructors
@@ -152,7 +159,10 @@ public abstract class ShamBundle
     public void start()
         throws BundleException
     {
+        setState( Bundle.STARTING );
+        sendBundleEventOfType( BundleEvent.STARTING );
         setState( Bundle.ACTIVE );
+        sendBundleEventOfType( BundleEvent.STARTED );
     }
 
     @Override
@@ -166,7 +176,10 @@ public abstract class ShamBundle
     public void stop()
         throws BundleException
     {
+        setState( Bundle.STOPPING );
+        sendBundleEventOfType( BundleEvent.STOPPING );
         setState( Bundle.INSTALLED );
+        sendBundleEventOfType( BundleEvent.STOPPED );
     }
 
     @Override
@@ -174,6 +187,15 @@ public abstract class ShamBundle
         throws BundleException
     {
         stop();
+    }
+
+    public List<BundleListener> getBundleListeners()
+    {
+        if ( bundleListeners == null )
+        {
+            bundleListeners = new ArrayList<BundleListener>();
+        }
+        return bundleListeners;
     }
 
     // ----------------------------------------------------------------------
@@ -222,6 +244,14 @@ public abstract class ShamBundle
             headers = new Properties();
         }
         return headers;
+    }
+
+    private void sendBundleEventOfType( final int type )
+    {
+        for ( final BundleListener bundleListener : getBundleListeners() )
+        {
+            bundleListener.bundleChanged( new BundleEvent( type, this ) );
+        }
     }
 
 }

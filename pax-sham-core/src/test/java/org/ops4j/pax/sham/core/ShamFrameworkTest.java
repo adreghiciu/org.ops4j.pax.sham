@@ -19,9 +19,7 @@
 package org.ops4j.pax.sham.core;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.ops4j.pax.sham.core.support.PackageUtils.packagesOf;
 
 import org.junit.Test;
@@ -45,7 +43,9 @@ public class ShamFrameworkTest
             .withExecutionEnvironment( ExecutionEnvironment.J2SE_1_5 )
             .withExecutionEnvironment( ExecutionEnvironment.JavaSE_1_6 );
 
-        final String ee = framework.getBundleContext().getProperty( Constants.FRAMEWORK_EXECUTIONENVIRONMENT );
+        final String ee = framework.getSystemBundle().getBundleContext()
+            .getProperty( Constants.FRAMEWORK_EXECUTIONENVIRONMENT );
+
         assertThat( ee, containsString( ExecutionEnvironment.J2SE_1_3.forFS() ) );
         assertThat( ee, containsString( ExecutionEnvironment.J2SE_1_4.forFS() ) );
         assertThat( ee, containsString( ExecutionEnvironment.J2SE_1_5.forFS() ) );
@@ -76,7 +76,7 @@ public class ShamFrameworkTest
     public void installBundleWithExportsViaBundleContext()
         throws BundleException
     {
-        final ShamBundle foo = new ShamFramework().getBundleContext().installBundle( "foo" )
+        final ShamBundle foo = new ShamFramework().installBundle()
             .withPackages( "org.foo; version=1.0" );
 
         final String exports = (String) foo.getHeaders().get( Constants.EXPORT_PACKAGE );
