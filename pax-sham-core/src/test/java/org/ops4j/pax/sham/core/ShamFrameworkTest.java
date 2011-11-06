@@ -30,9 +30,8 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 
 /**
- * TODO
- *
- * @since 1.0
+ * @author Alin Dreghiciu (adreghiciu@gmail.com)
+ * @since 1.0.0, November 07, 2011
  */
 public class ShamFrameworkTest
 {
