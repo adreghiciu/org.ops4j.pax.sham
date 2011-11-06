@@ -27,7 +27,7 @@ import org.osgi.framework.ServiceRegistration;
  * @author Alin Dreghiciu (adreghiciu@gmail.com)
  * @since 1.0.0, November 07, 2011
  */
-public class Activator
+public class RegisteringServiceActivator
     implements BundleActivator
 {
 
@@ -37,8 +37,9 @@ public class Activator
     public void start( final BundleContext bundleContext )
         throws Exception
     {
-        serviceRegistration =
-            bundleContext.registerService( HelloWorld.class.getName(), new HelloWorldImpl(), null );
+        serviceRegistration = bundleContext.registerService(
+            HelloWorld.class.getName(), new HelloWorldImpl(), null
+        );
     }
 
     @Override

@@ -30,8 +30,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.ops4j.pax.sham.core.foo.HelloWorld;
-import org.ops4j.pax.sham.core.foo.internal.Activator;
+import org.ops4j.pax.sham.core.foo.internal.BundleListenerRegisteringServiceActivator;
 import org.ops4j.pax.sham.core.foo.internal.HelloWorldImpl;
+import org.ops4j.pax.sham.core.foo.internal.RegisteringServiceActivator;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -51,8 +55,50 @@ public class ShamFrameworkMockingTest
         when( bundleContext.registerService( anyString(), any(), Matchers.<Dictionary>any() ) )
             .thenReturn( serviceRegistration );
 
-        final Activator activator = new Activator();
+        final BundleActivator activator = new RegisteringServiceActivator();
+
         activator.start( bundleContext );
+        activator.stop( bundleContext );
+
+        final ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass( String.class );
+        final ArgumentCaptor<HelloWorld> serviceCaptor = ArgumentCaptor.forClass( HelloWorld.class );
+
+        verify( bundleContext ).registerService(
+            typeCaptor.capture(), serviceCaptor.capture(), Matchers.<Dictionary>any()
+        );
+
+        assertThat( typeCaptor.getValue(), is( equalTo( HelloWorld.class.getName() ) ) );
+        assertThat( serviceCaptor.getValue(), is( instanceOf( HelloWorldImpl.class ) ) );
+
+        verify( serviceRegistration ).unregister();
+    }
+
+    @Test
+    public void bundleListenerRegisteringAService()
+        throws Exception
+    {
+        final ShamBundleContext bundleContext = new ShamFramework().getBundleContext();
+        final ServiceRegistration serviceRegistration = mock( ServiceRegistration.class );
+
+        final ArgumentCaptor<BundleListener> blCaptor = ArgumentCaptor.forClass( BundleListener.class );
+
+        when( bundleContext.registerService( anyString(), any(), Matchers.<Dictionary>any() ) )
+            .thenReturn( serviceRegistration );
+
+        final BundleActivator activator = new BundleListenerRegisteringServiceActivator();
+
+        activator.start( bundleContext );
+
+        verify( bundleContext ).addBundleListener( blCaptor.capture() );
+
+        final ShamBundle foo = bundleContext.installBundle( "foo" );
+
+        foo.start();
+        blCaptor.getValue().bundleChanged( new BundleEvent( BundleEvent.STARTED, foo ) );
+
+        foo.stop();
+        blCaptor.getValue().bundleChanged( new BundleEvent( BundleEvent.STOPPED, foo ) );
+
         activator.stop( bundleContext );
 
         final ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass( String.class );
