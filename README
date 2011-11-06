@@ -26,21 +26,18 @@ Releases go to Maven Central.
 
 No version of Pax Sham was released.
 
-## Issue Tracking
+## Issue Tracking (Not yet functional)
 
 * <http://github.com/ops4j/org.ops4j.pax.sham/issues>
-(Not yet functional)
 
-## Continuus Integration Builds
+## Continuus Integration Builds (Not yet functional)
 
 We have a continuus integration build set up here:
 
 * <http://ci.okidokiteam.com/hudson/job/org.ops4j.pax.sham>
-(Not yet functional)
 
 Artifacts are being published to:
 
 * <https://oss.sonatype.org/content/repositories/ops4j-snapshots>
-(Not yet functional)
 
 The OPS4J Team.
