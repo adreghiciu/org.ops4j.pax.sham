@@ -19,22 +19,15 @@
 package org.ops4j.pax.sham.core;
 
 import static java.util.Arrays.asList;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.mockito.Matchers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.ops4j.pax.sham.core.behavior.BundleListenerBehavior;
+import org.ops4j.pax.sham.core.behavior.ExecutionEnvironmentBehavior;
+import org.ops4j.pax.sham.core.behavior.InstallBundleBehavior;
 import org.ops4j.pax.sham.core.internal.PartialImplementation;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 
 /**
  * TODO
@@ -49,8 +42,14 @@ public class ShamFramework
     // Implementation fields
     // ----------------------------------------------------------------------
 
+    /**
+     * Current installed bundles. Lazy initialized.
+     */
     private List<ShamBundle> bundles;
 
+    /**
+     * Execution environments. Lazy initialized.
+     */
     private List<ExecutionEnvironment> executionEnvironments;
 
     // ----------------------------------------------------------------------
@@ -111,75 +110,103 @@ public class ShamFramework
     public ShamBundle installBundle()
     {
         final ShamBundle bundle = mock( ShamBundle.class, new PartialImplementation( ShamBundle.class ) );
+
+        bundle.setBundleId( bundles.size() - 1 );
         bundles.add( bundle );
 
-        final ShamBundleContext bundleContext = mock( ShamBundleContext.class);
-        when( bundleContext.getProperty( Constants.FRAMEWORK_EXECUTIONENVIRONMENT ) ).thenAnswer(
-            new Answer<String>()
-            {
-                @Override
-                public String answer( final InvocationOnMock invocation )
-                    throws Throwable
-                {
-                    return executionEnvironments();
-                }
-            }
+        final ShamBundleContext bundleContext = mock(
+            ShamBundleContext.class, new PartialImplementation( ShamBundleContext.class )
         );
-        when( bundleContext.getBundles() ).thenReturn( bundles.toArray( new ShamBundle[bundles.size()] ) );
-        when( bundleContext.getBundle( anyLong() ) ).thenAnswer(
-            new Answer<ShamBundle>()
-            {
-                @Override
-                public ShamBundle answer( final InvocationOnMock invocation )
-                    throws Throwable
-                {
-                    return bundles.get( ( (Long) invocation.getArguments()[0] ).intValue() );
-                }
-            }
-        );
-        try
-        {
-            when( bundleContext.installBundle( anyString() ) ).thenAnswer(
-                new Answer<ShamBundle>()
-                {
-                    @Override
-                    public ShamBundle answer( final InvocationOnMock invocation )
-                        throws Throwable
-                    {
-                        return installBundle();
-                    }
-                }
-            );
-            when( bundleContext.installBundle( anyString(), Matchers.<InputStream>any() ) ).thenAnswer(
-                new Answer<Bundle>()
-                {
-                    @Override
-                    public Bundle answer( final InvocationOnMock invocation )
-                        throws Throwable
-                    {
-                        return installBundle();
-                    }
-                }
-            );
-        }
-        catch ( BundleException ignore )
-        {
-            // we are mocking so it will not happen
-        }
+        bundleContext.setFramework( this );
+        bundleContext.setBundle( bundle );
 
-        return bundle.setBundleId( bundles.size() - 1 ).setBundleContext( bundleContext );
+        bundle.setBundleContext( bundleContext );
+
+        applyBehavioursTo( bundle );
+        applyBehavioursTo( bundleContext );
+
+        return bundle;
     }
 
-    // ----------------------------------------------------------------------
-    // Implementation methods
-    // ----------------------------------------------------------------------
+    /**
+     * Applies default bundle context behaviours. Subclasses, as when used in a test, can decide to add addition ones or
+     * do not apply them at all by not calling this method. <br/>
+     * Default behaviors applied are:<br/>
+     * * {@link #applyExecutionEnvironmentBehavior(ShamBundleContext)}<br/>
+     * * {@link #applyInstallBundleBehavior(ShamBundleContext)}<br/>
+     * * {@link #applyBundleListenerBehavior(ShamBundleContext)}
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyBehavioursTo( final ShamBundleContext bundleContext )
+    {
+        applyExecutionEnvironmentBehavior( bundleContext );
+        applyInstallBundleBehavior( bundleContext );
+        applyBundleListenerBehavior( bundleContext );
+    }
+
+    /**
+     * Applies {@link ExecutionEnvironmentBehavior}. Subclasses, as when used in a test, can decide to do not apply
+     * this behavior by not calling this method.
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyExecutionEnvironmentBehavior( final ShamBundleContext bundleContext )
+    {
+        ExecutionEnvironmentBehavior.applyExecutionEnvironmentBehavior( bundleContext );
+    }
+
+    /**
+     * Applies {@link InstallBundleBehavior}. Subclasses, as when used in a test, can decide to do not apply
+     * this behavior by not calling this method.
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyInstallBundleBehavior( final ShamBundleContext bundleContext )
+    {
+        InstallBundleBehavior.applyInstallBundleBehavior( bundleContext );
+    }
+
+    /**
+     * Applies {@link BundleListenerBehavior}. Subclasses, as when used in a test, can decide to do not apply
+     * this behavior by not calling this method.
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyBundleListenerBehavior( final ShamBundleContext bundleContext )
+    {
+        BundleListenerBehavior.applyBundleListenerBehavior( bundleContext );
+    }
+
+    /**
+     * Applies default bundle behaviours. Subclasses, as when used in a test, can decide to add addition ones or
+     * do not apply them at all by not calling this method. <br/>
+     * Default behaviors applied are:<br/>
+     * * none (yet)
+     *
+     * @param bundle to apply to
+     */
+    protected void applyBehavioursTo( final ShamBundle bundle )
+    {
+        // none yet
+    }
+
+    /**
+     * Returns current installed bundle.
+     *
+     * @return current installed bundle
+     */
+    public List<ShamBundle> getBundles()
+    {
+        return bundles;
+    }
 
     /**
      * Joins execution environments as a comma separated string.
      *
      * @return execution environments
      */
-    private String executionEnvironments()
+    public String getExecutionEnvironments()
     {
         if ( executionEnvironments.size() == 0 )
         {

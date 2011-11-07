@@ -18,31 +18,41 @@
 
 package org.ops4j.pax.sham.core.behavior;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.mockito.Mockito.doAnswer;
 
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.ops4j.pax.sham.core.ShamBundle;
+import org.ops4j.pax.sham.core.ShamBundleContext;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 
 /**
- * TODO
+ * Configures bundle context to automatically send bundle events on bundle state changes to registered listeners.
  *
- * @since 1.0
+ * @author Alin Dreghiciu (adreghiciu@gmail.com)
+ * @since 1.0.0, November 07, 2011
  */
 public class BundleListenerBehavior
 {
 
-    public static ShamBundle applyBundleListenerBehavior( final ShamBundle bundle )
-    {
-        final BundleListenerProxy bundleListenerProxy = new BundleListenerProxy();
+    // ----------------------------------------------------------------------
+    // Public methods
+    // ----------------------------------------------------------------------
 
-        final BundleContext bundleContext = bundle.getBundleContext();
-        Mockito.doAnswer(
+    /**
+     * Stub {@link BundleContext#addBundleListener(BundleListener)} and
+     * {@link BundleContext#removeBundleListener(BundleListener)}.
+     *
+     * @param bundleContext to be stubbed
+     * @return provided bundle context, for fluent api usage
+     */
+    public static ShamBundleContext applyBundleListenerBehavior( final ShamBundleContext bundleContext )
+    {
+        final ShamBundle bundle = bundleContext.getBundle();
+
+        doAnswer(
             new Answer<Void>()
             {
                 @Override
@@ -50,12 +60,13 @@ public class BundleListenerBehavior
                     throws Throwable
                 {
                     final BundleListener bundleListener = (BundleListener) invocationOnMock.getArguments()[0];
-                    bundleListenerProxy.listeners.add( bundleListener );
+                    bundle.getBundleListeners().add( bundleListener );
                     return null;
                 }
             }
         ).when( bundleContext ).addBundleListener( Mockito.<BundleListener>any() );
-        Mockito.doAnswer(
+
+        doAnswer(
             new Answer<Void>()
             {
                 @Override
@@ -63,37 +74,13 @@ public class BundleListenerBehavior
                     throws Throwable
                 {
                     final BundleListener bundleListener = (BundleListener) invocationOnMock.getArguments()[0];
-                    bundleListenerProxy.listeners.remove( bundleListener );
+                    bundle.getBundleListeners().remove( bundleListener );
                     return null;
                 }
             }
         ).when( bundleContext ).removeBundleListener( Mockito.<BundleListener>any() );
 
-        bundle.getBundleListeners().add( bundleListenerProxy );
-
-        return bundle;
-    }
-
-    private static class BundleListenerProxy
-        implements BundleListener
-    {
-
-        private List<BundleListener> listeners;
-
-        BundleListenerProxy()
-        {
-            listeners = new ArrayList<BundleListener>();
-        }
-
-        @Override
-        public void bundleChanged( final BundleEvent bundleEvent )
-        {
-            for ( final BundleListener bundleListener : listeners )
-            {
-                bundleListener.bundleChanged( bundleEvent );
-            }
-        }
-
+        return bundleContext;
     }
 
 }

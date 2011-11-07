@@ -20,6 +20,7 @@ package org.ops4j.pax.sham.core;
 
 import java.io.InputStream;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
@@ -29,22 +30,71 @@ import org.osgi.framework.BundleException;
  * @author Alin Dreghiciu (adreghiciu@gmail.com)
  * @since 1.0.0, November 07, 2011
  */
-public interface ShamBundleContext
-    extends BundleContext
+public abstract class ShamBundleContext
+    implements BundleContext
 {
 
-    @Override
-    ShamBundle getBundle( long id );
+    // ----------------------------------------------------------------------
+    // Implementation fields
+    // ----------------------------------------------------------------------
+
+    /**
+     * Framework that created this bundle context. Injected by {@link ShamFramework} on bundle context creation.
+     */
+    private ShamFramework framework;
+
+    /**
+     * Associated bundle. Injected by {@link ShamFramework} on bundle context creation.
+     */
+    private ShamBundle bundle;
+
+    /**
+     * Returns the framework that created this bundle context.
+     * @return the framework that created this bundle context.
+     */
+    public ShamFramework getFramework()
+    {
+        return framework;
+    }
 
     @Override
-    ShamBundle[] getBundles();
+    public ShamBundle getBundle()
+    {
+        return bundle;
+    }
 
     @Override
-    ShamBundle installBundle( String location )
+    public ShamBundle getBundle( final long id ){
+        return framework.getBundles().get(0);
+    }
+
+    @Override
+    public ShamBundle[] getBundles(){
+        return framework.getBundles().toArray(new ShamBundle[framework.getBundles().size()]);
+}
+
+    @Override
+    public abstract ShamBundle installBundle( final String location )
         throws BundleException;
 
     @Override
-    ShamBundle installBundle( String location, InputStream inputStream )
+    public abstract ShamBundle installBundle( final String location, final InputStream inputStream )
         throws BundleException;
+
+    // ----------------------------------------------------------------------
+    // Implementation methods
+    // ----------------------------------------------------------------------
+
+    ShamBundleContext setFramework(final ShamFramework framework)
+    {
+        this.framework = framework;
+        return this;
+    }
+
+    ShamBundleContext setBundle(final ShamBundle bundle)
+    {
+        this.bundle = bundle;
+        return this;
+    }
 
 }

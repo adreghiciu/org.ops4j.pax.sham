@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.ops4j.pax.sham.core.behavior.BundleListenerBehavior.applyBundleListenerBehavior;
 
 import java.util.Dictionary;
 
@@ -80,7 +79,53 @@ public class ShamFrameworkMockingTest
         throws Exception
     {
         final ShamBundle foo = new ShamFramework().installBundle();
+
         final ShamBundleContext bundleContext = foo.getBundleContext();
+        final ServiceRegistration serviceRegistration = mock( ServiceRegistration.class );
+
+        when( bundleContext.registerService( anyString(), any(), Matchers.<Dictionary>any() ) )
+            .thenReturn( serviceRegistration );
+
+        final BundleActivator activator = new BundleListenerRegisteringServiceActivator();
+
+        activator.start( bundleContext );
+
+        verify( bundleContext ).addBundleListener( Matchers.<BundleListener>any() );
+
+        foo.start();
+        foo.stop();
+
+        activator.stop( bundleContext );
+
+        final ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass( String.class );
+        final ArgumentCaptor<HelloWorld> serviceCaptor = ArgumentCaptor.forClass( HelloWorld.class );
+
+        verify( bundleContext ).registerService(
+            typeCaptor.capture(), serviceCaptor.capture(), Matchers.<Dictionary>any()
+        );
+
+        assertThat( typeCaptor.getValue(), is( equalTo( HelloWorld.class.getName() ) ) );
+        assertThat( serviceCaptor.getValue(), is( instanceOf( HelloWorldImpl.class ) ) );
+
+        verify( serviceRegistration ).unregister();
+    }
+
+    @Test
+    public void bundleListenerRegisteringAServiceCustomHandling()
+        throws Exception
+    {
+        final ShamFramework framework = new ShamFramework()
+        {
+            @Override
+            protected void applyBundleListenerBehavior( final ShamBundleContext bundleContext )
+            {
+                // do not apply, we will handle it by ourselves
+            }
+        };
+
+        final ShamBundle foo = framework.installBundle();
+        final ShamBundleContext bundleContext = foo.getBundleContext();
+
         final ServiceRegistration serviceRegistration = mock( ServiceRegistration.class );
 
         final ArgumentCaptor<BundleListener> blCaptor = ArgumentCaptor.forClass( BundleListener.class );
@@ -99,42 +144,6 @@ public class ShamFrameworkMockingTest
 
         foo.stop();
         blCaptor.getValue().bundleChanged( new BundleEvent( BundleEvent.STOPPED, foo ) );
-
-        activator.stop( bundleContext );
-
-        final ArgumentCaptor<String> typeCaptor = ArgumentCaptor.forClass( String.class );
-        final ArgumentCaptor<HelloWorld> serviceCaptor = ArgumentCaptor.forClass( HelloWorld.class );
-
-        verify( bundleContext ).registerService(
-            typeCaptor.capture(), serviceCaptor.capture(), Matchers.<Dictionary>any()
-        );
-
-        assertThat( typeCaptor.getValue(), is( equalTo( HelloWorld.class.getName() ) ) );
-        assertThat( serviceCaptor.getValue(), is( instanceOf( HelloWorldImpl.class ) ) );
-
-        verify( serviceRegistration ).unregister();
-    }
-
-    @Test
-    public void bundleListenerRegisteringAServiceUsingBundleListenerBehavior()
-        throws Exception
-    {
-        final ShamBundle foo = applyBundleListenerBehavior( new ShamFramework().installBundle() );
-
-        final ShamBundleContext bundleContext = foo.getBundleContext();
-        final ServiceRegistration serviceRegistration = mock( ServiceRegistration.class );
-
-        when( bundleContext.registerService( anyString(), any(), Matchers.<Dictionary>any() ) )
-            .thenReturn( serviceRegistration );
-
-        final BundleActivator activator = new BundleListenerRegisteringServiceActivator();
-
-        activator.start( bundleContext );
-
-        verify( bundleContext ).addBundleListener( Matchers.<BundleListener>any() );
-
-        foo.start();
-        foo.stop();
 
         activator.stop( bundleContext );
 

@@ -111,7 +111,7 @@ public abstract class ShamBundle
     public ShamBundle withPackages( final String... exports )
     {
         this.getExports().addAll( Arrays.asList( exports ) );
-        getHeadersAsProperties().setProperty( Constants.EXPORT_PACKAGE, exports() );
+        getHeadersAsProperties().setProperty( Constants.EXPORT_PACKAGE, toExportedPackages() );
         return this;
     }
 
@@ -160,9 +160,9 @@ public abstract class ShamBundle
         throws BundleException
     {
         setState( Bundle.STARTING );
-        sendBundleEventOfType( BundleEvent.STARTING );
+        notifyBundleListeners( BundleEvent.STARTING );
         setState( Bundle.ACTIVE );
-        sendBundleEventOfType( BundleEvent.STARTED );
+        notifyBundleListeners( BundleEvent.STARTED );
     }
 
     @Override
@@ -177,9 +177,9 @@ public abstract class ShamBundle
         throws BundleException
     {
         setState( Bundle.STOPPING );
-        sendBundleEventOfType( BundleEvent.STOPPING );
+        notifyBundleListeners( BundleEvent.STOPPING );
         setState( Bundle.INSTALLED );
-        sendBundleEventOfType( BundleEvent.STOPPED );
+        notifyBundleListeners( BundleEvent.STOPPED );
     }
 
     @Override
@@ -189,6 +189,11 @@ public abstract class ShamBundle
         stop();
     }
 
+    /**
+     * Returns current bundle listeners.
+     *
+     * @return bundle listeners.
+     */
     public List<BundleListener> getBundleListeners()
     {
         if ( bundleListeners == null )
@@ -202,19 +207,36 @@ public abstract class ShamBundle
     // Implementation methods
     // ----------------------------------------------------------------------
 
+    /**
+     * Sets the associated bundle context.
+     *
+     * @param bundleContext associated bundle context
+     * @return itself, for fluent api usage
+     */
     ShamBundle setBundleContext( final ShamBundleContext bundleContext )
     {
         this.bundleContext = bundleContext;
         return this;
     }
 
+    /**
+     * Sets the bundle id.
+     *
+     * @param id bundle id
+     * @return itself, for fluent api usage
+     */
     ShamBundle setBundleId( final long id )
     {
         this.id = id;
         return this;
     }
 
-    private String exports()
+    /**
+     * Joins exported packages in complience with OSGi specs for Export-Packages.
+     *
+     * @return exported packages
+     */
+    private String toExportedPackages()
     {
         final StringBuilder sb = new StringBuilder();
         for ( final String export : getExports() )
@@ -228,6 +250,11 @@ public abstract class ShamBundle
         return sb.toString();
     }
 
+    /**
+     * Returns list of bundle exported packages.
+     *
+     * @return list of bundle exported packages
+     */
     private List<String> getExports()
     {
         if ( exports == null )
@@ -237,6 +264,11 @@ public abstract class ShamBundle
         return exports;
     }
 
+    /**
+     * Returns bundle headers as Java Properties.
+     *
+     * @return bundle headers as Java Properties
+     */
     private Properties getHeadersAsProperties()
     {
         if ( headers == null )
@@ -246,7 +278,12 @@ public abstract class ShamBundle
         return headers;
     }
 
-    private void sendBundleEventOfType( final int type )
+    /**
+     * Notify registered bundle listeners of a bundle event of specified type.
+     *
+     * @param type bundle event type to be notified
+     */
+    private void notifyBundleListeners( final int type )
     {
         for ( final BundleListener bundleListener : getBundleListeners() )
         {
