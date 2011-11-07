@@ -35,6 +35,22 @@ public class ShamFrameworkTest
 {
 
     @Test
+    public void systemBundleId()
+    {
+        final ShamFramework framework = new ShamFramework();
+
+        assertThat( framework.getSystemBundle().getBundleId(), is( 0L ) );
+    }
+
+     @Test
+    public void bundleId()
+    {
+        final ShamBundle bundle = new ShamFramework().installBundle();
+
+        assertThat( bundle.getBundleId(), is( 1L ) );
+    }
+
+    @Test
     public void executionEnvironment()
     {
         final ShamFramework framework = new ShamFramework()

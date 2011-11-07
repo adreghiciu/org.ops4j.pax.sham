@@ -111,7 +111,7 @@ public class ShamFramework
     {
         final ShamBundle bundle = mock( ShamBundle.class, new PartialImplementation( ShamBundle.class ) );
 
-        bundle.setBundleId( bundles.size() - 1 );
+        bundle.setBundleId( bundles.size() );
         bundles.add( bundle );
 
         final ShamBundleContext bundleContext = mock(
