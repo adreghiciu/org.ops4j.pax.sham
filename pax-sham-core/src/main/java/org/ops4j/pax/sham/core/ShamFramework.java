@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.ops4j.pax.sham.core.behavior.BundleListenerBehavior;
 import org.ops4j.pax.sham.core.behavior.ExecutionEnvironmentBehavior;
+import org.ops4j.pax.sham.core.behavior.FrameworkVersionBehavior;
 import org.ops4j.pax.sham.core.behavior.InstallBundleBehavior;
 import org.ops4j.pax.sham.core.internal.PartialImplementation;
 
@@ -51,6 +52,11 @@ public class ShamFramework
      * Execution environments. Lazy initialized.
      */
     private List<ExecutionEnvironment> executionEnvironments;
+
+    /**
+     * Framework version.
+     */
+    private String frameworkVersion;
 
     // ----------------------------------------------------------------------
     // Constructors
@@ -89,6 +95,18 @@ public class ShamFramework
     public ShamFramework withSystemPackages( final String... exports )
     {
         getSystemBundle().withPackages( exports );
+        return this;
+    }
+
+    /**
+     * Builder method for specifying framework version.
+     *
+     * @param exports packages exported by system bundle
+     * @return itself, for fluent api usage
+     */
+    public ShamFramework withFrameworkVersion( final String version )
+    {
+        frameworkVersion = version;
         return this;
     }
 
@@ -141,6 +159,7 @@ public class ShamFramework
     protected void applyBehavioursTo( final ShamBundleContext bundleContext )
     {
         applyExecutionEnvironmentBehavior( bundleContext );
+        applyFrameworkVersionBehavior( bundleContext );
         applyInstallBundleBehavior( bundleContext );
         applyBundleListenerBehavior( bundleContext );
     }
@@ -154,6 +173,17 @@ public class ShamFramework
     protected void applyExecutionEnvironmentBehavior( final ShamBundleContext bundleContext )
     {
         ExecutionEnvironmentBehavior.applyExecutionEnvironmentBehavior( bundleContext );
+    }
+
+    /**
+     * Applies {@link FrameworkVersionBehavior}. Subclasses, as when used in a test, can decide to do not apply
+     * this behavior by not calling this method.
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyFrameworkVersionBehavior( final ShamBundleContext bundleContext )
+    {
+        FrameworkVersionBehavior.applyFrameworkVersionBehavior( bundleContext );
     }
 
     /**
@@ -222,6 +252,16 @@ public class ShamFramework
             sb.append( executionEnvironment.forFS() );
         }
         return sb.toString();
+    }
+
+    /**
+     * Returns framework version.
+     *
+     * @return framework version
+     */
+    public String getFrameworkVersion()
+    {
+        return frameworkVersion;
     }
 
 }
