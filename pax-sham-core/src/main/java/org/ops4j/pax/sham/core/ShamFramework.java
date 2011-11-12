@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ops4j.pax.sham.core.behavior.BundleListenerBehavior;
+import org.ops4j.pax.sham.core.behavior.CreateFilterBehavior;
 import org.ops4j.pax.sham.core.behavior.ExecutionEnvironmentBehavior;
 import org.ops4j.pax.sham.core.behavior.FrameworkVersionBehavior;
 import org.ops4j.pax.sham.core.behavior.InstallBundleBehavior;
@@ -162,6 +163,7 @@ public class ShamFramework
         applyFrameworkVersionBehavior( bundleContext );
         applyInstallBundleBehavior( bundleContext );
         applyBundleListenerBehavior( bundleContext );
+        applyCreateFilterBehavior( bundleContext );
     }
 
     /**
@@ -206,6 +208,17 @@ public class ShamFramework
     protected void applyBundleListenerBehavior( final ShamBundleContext bundleContext )
     {
         BundleListenerBehavior.applyBundleListenerBehavior( bundleContext );
+    }
+
+    /**
+     * Applies {@link FrameworkVersionBehavior}. Subclasses, as when used in a test, can decide to do not apply
+     * this behavior by not calling this method.
+     *
+     * @param bundleContext to apply to
+     */
+    protected void applyCreateFilterBehavior( final ShamBundleContext bundleContext )
+    {
+        CreateFilterBehavior.applyCreateFilterBehavior( bundleContext );
     }
 
     /**
