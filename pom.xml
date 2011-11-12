@@ -45,7 +45,7 @@
 
   <scm>
     <connection>scm:git:git://github.com/ops4j/org.ops4j.pax.sham.git</connection>
-    <developerConnection>${release-paxsham-altGitURL}</developerConnection>
+    <developerConnection>scm:git:git@github.com:ops4j/org.ops4j.pax.sham.git</developerConnection>
     <url>http://github.com/ops4j/org.ops4j.pax.sham/tree/master</url>
   </scm>
 
